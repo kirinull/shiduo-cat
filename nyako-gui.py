@@ -73,13 +73,15 @@ class RoundButton(tk.Canvas):
         self.bind("<Enter>", lambda e: self._set_hover(True))
         self.bind("<Leave>", lambda e: self._set_hover(False))
         self.bind("<Button-1>", lambda e: self.cmd() if self.cmd else None)
-        self._draw()
+        self.after_idle(self._draw)
 
     def _set_hover(self, v):
         self.hover = v
         self._draw()
 
     def _draw(self):
+        if not self.winfo_exists():
+            return
         self.delete("all")
         bg = self.accent if self.hover else C["surface1"]
         fg = C["crust"] if self.hover else C["text"]
