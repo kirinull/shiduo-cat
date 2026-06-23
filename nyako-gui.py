@@ -60,19 +60,23 @@ class _W(io.StringIO):
 # ═══════════════════════════════════════════════════════════
 # 按钮：统一圆角扁平风格
 # ═══════════════════════════════════════════════════════════
-class RoundButton(tk.Canvas):
+class RoundButton(tk.Frame):
+    """统一风格的圆角按钮，用 Frame + Canvas 实现"""
     def __init__(self, parent, text, command, width=200, height=36, accent=C["mauve"]):
-        super().__init__(parent, width=width, height=height, bg=C["surface0"],
-                         highlightthickness=0, bd=0)
+        super().__init__(parent, bg=C["surface0"], width=width, height=height, bd=0)
+        self.pack_propagate(False)
         self.cmd = command
         self.accent = accent
         self.hover = False
-        self._r = 8  # 圆角半径
+        self._r = 8
         self._w, self._h = width, height
         self._text = text
-        self.bind("<Enter>", lambda e: self._set_hover(True))
-        self.bind("<Leave>", lambda e: self._set_hover(False))
-        self.bind("<Button-1>", lambda e: self.cmd() if self.cmd else None)
+        self._canvas = tk.Canvas(self, width=width, height=height,
+                                 bg=C["surface0"], highlightthickness=0, bd=0)
+        self._canvas.pack(fill=tk.BOTH, expand=True)
+        self._canvas.bind("<Enter>", lambda e: self._set_hover(True))
+        self._canvas.bind("<Leave>", lambda e: self._set_hover(False))
+        self._canvas.bind("<Button-1>", lambda e: self.cmd() if self.cmd else None)
         self.after_idle(self._draw)
 
     def _set_hover(self, v):
@@ -80,19 +84,17 @@ class RoundButton(tk.Canvas):
         self._draw()
 
     def _draw(self):
-        if not self.winfo_exists():
+        if not self._canvas.winfo_exists():
             return
-        self.delete("all")
+        self._canvas.delete("all")
         bg = self.accent if self.hover else C["surface1"]
         fg = C["crust"] if self.hover else C["text"]
-        r = self._r
-        w, h = self._w, self._h
-        # 圆角矩形
-        self.create_polygon(
+        r, w, h = self._r, self._w, self._h
+        self._canvas.create_polygon(
             r, 0, w - r, 0, w, r, w, h - r, w - r, h, r, h, 0, h - r, 0, r,
             smooth=True, fill=bg, outline=""
         )
-        self.create_text(w // 2, h // 2, text=self._text, fill=fg, font=FONT)
+        self._canvas.create_text(w // 2, h // 2, text=self._text, fill=fg, font=FONT)
 
     def set_state(self, enabled):
         self.accent = self.accent if enabled else C["surface2"]
